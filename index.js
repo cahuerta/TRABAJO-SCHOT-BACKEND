@@ -31,6 +31,21 @@ async function appendRow(tabName, values) {
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
+// ========== DEBUG AUTH (TEMPORAL) ==========
+app.get('/_debug/auth', async (_req, res) => {
+  try {
+    const token = await auth.getAccessToken(); // fuerza el intercambio JWT
+    res.json({
+      ok: true,
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || null,
+      tokenSample: String(token).slice(-12) // solo para confirmar que existe
+    });
+  } catch (e) {
+    console.error('Auth debug error:', e);
+    res.status(500).json({ ok: false, message: e.message });
+  }
+});
+
 // ========= PACIENTES =========
 // Columns: timestamp | nombre | rut | edad | dolor | lado
 app.post('/api/pacientes', async (req, res) => {
