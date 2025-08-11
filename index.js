@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT || 3001;
 const SHEET_ID = process.env.SHEET_ID;
 
+// Auth Google Sheets
 const auth = new google.auth.JWT(
   process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
   null,
@@ -24,52 +25,80 @@ async function appendRow(tabName, values) {
     spreadsheetId: SHEET_ID,
     range: `${tabName}!A:Z`,
     valueInputOption: 'USER_ENTERED',
-    requestBody: {
-      values: [values]
-    }
+    requestBody: { values: [values] }
   });
 }
 
-app.get('/health', (req, res) => res.json({ ok: true }));
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
-// ---------- Pacientes ----------
+// ========= PACIENTES =========
+// Columns: timestamp | nombre | rut | edad | dolor | lado
 app.post('/api/pacientes', async (req, res) => {
   try {
-    const { nombre, rut, edad, sexo, dolor, lado, observaciones } = req.body || {};
+    const { nombre, rut, edad, dolor, lado } = req.body || {};
+    if (!nombre || !rut || !edad || !dolor || !lado) {
+      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
+    }
     const timestamp = new Date().toISOString();
-    const row = [timestamp, nombre || '', rut || '', edad || '', sexo || '', dolor || '', lado || '', observaciones || ''];
+    const row = [timestamp, String(nombre), String(rut), String(edad), String(dolor), String(lado)];
     await appendRow('Pacientes', row);
     res.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error('Pacientes error:', e);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
 
-// ---------- Traumatologo ----------
+// ========= TRAUMATOLOGO =========
+// Columns: timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
 app.post('/api/traumatologo', async (req, res) => {
   try {
-    const { pacienteNombre, rut, edad, diagnostico, examenSolicitado, observaciones } = req.body || {};
+    const { pacienteNombre, rut, edad, examenSolicitado, nombreMedico } = req.body || {};
+    if (!pacienteNombre || !rut || !edad || !examenSolicitado || !nombreMedico) {
+      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
+    }
     const timestamp = new Date().toISOString();
-    const row = [timestamp, pacienteNombre || '', rut || '', edad || '', diagnostico || '', examenSolicitado || '', observaciones || ''];
+    const especialidad = 'Traumatólogo';
+    const row = [
+      timestamp,
+      String(pacienteNombre),
+      String(rut),
+      String(edad),
+      String(examenSolicitado),
+      String(nombreMedico),
+      especialidad
+    ];
     await appendRow('Traumatologo', row);
     res.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error('Traumatologo error:', e);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
 
-// ---------- Medico General ----------
+// ========= MEDICO GENERAL =========
+// Columns: timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
 app.post('/api/medico-general', async (req, res) => {
   try {
-    const { pacienteNombre, rut, edad, diagnosticoGeneral, examenSolicitado, tratamientoSugerido, observaciones } = req.body || {};
+    const { pacienteNombre, rut, edad, examenSolicitado, nombreMedico } = req.body || {};
+    if (!pacienteNombre || !rut || !edad || !examenSolicitado || !nombreMedico) {
+      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
+    }
     const timestamp = new Date().toISOString();
-    const row = [timestamp, pacienteNombre || '', rut || '', edad || '', diagnosticoGeneral || '', examenSolicitado || '', tratamientoSugerido || '', observaciones || ''];
+    const especialidad = 'Medicina general';
+    const row = [
+      timestamp,
+      String(pacienteNombre),
+      String(rut),
+      String(edad),
+      String(examenSolicitado),
+      String(nombreMedico),
+      especialidad
+    ];
     await appendRow('MedicoGeneral', row);
     res.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error('MedicoGeneral error:', e);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
