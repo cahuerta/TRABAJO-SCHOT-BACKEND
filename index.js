@@ -9,12 +9,23 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3001;
-const SHEET_ID = process.env.SHEET_ID;
+
+// === ID de la planilla ===
+// En Render debes tener GOOGLE_SHEETS_ID con el ID de la Sheet.
+// Opcionalmente puedes usar SHEET_ID en local.
+const SHEET_ID = process.env.GOOGLE_SHEETS_ID || process.env.SHEET_ID;
+
+if (!SHEET_ID) {
+  console.error('Falta GOOGLE_SHEETS_ID (o SHEET_ID) en las variables de entorno');
+} else {
+  console.log('Usando SHEET_ID:', SHEET_ID);
+}
 
 // ======== AUTH GOOGLE (robusto: JSON único en ENV) ========
 if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
   console.error('Falta GOOGLE_SERVICE_ACCOUNT_JSON en las variables de entorno');
 }
+
 let credentials;
 try {
   credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '{}');
@@ -30,6 +41,7 @@ const jwtClient = new google.auth.JWT(
   credentials.private_key,
   scopes
 );
+
 const sheets = google.sheets({ version: 'v4', auth: jwtClient });
 
 // Helper para escribir una fila
@@ -51,6 +63,7 @@ app.get('/_debug/auth', async (_req, res) => {
     res.json({
       ok: true,
       email: credentials.client_email || null,
+      sheetId: SHEET_ID || null,
       tokenSample: String(token).slice(-12) // solo para confirmar que existe
     });
   } catch (e) {
@@ -68,7 +81,14 @@ app.post('/api/pacientes', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
     }
     const timestamp = new Date().toISOString();
-    const row = [timestamp, String(nombre), String(rut), String(edad), String(dolor), String(lado)];
+    const row = [
+      timestamp,
+      String(nombre),
+      String(rut),
+      String(edad),
+      String(dolor),
+      String(lado)
+    ];
     await appendRow('Pacientes', row);
     res.json({ ok: true });
   } catch (e) {
