@@ -72,24 +72,60 @@ app.get('/_debug/auth', async (_req, res) => {
   }
 });
 
-// ========= PACIENTES =========
-// Columns: timestamp | nombre | rut | edad | dolor | lado
+/**
+ * ========= PACIENTES (LISTA) =========
+ * Hoja LISTA columnas:
+ * timestamp | pacienteNombre | rut | edad | Dolor | Lado |
+ * examenSolicitadoMedico | examenSolicitadoIA | nombreMedico | especialidad
+ *
+ * Acepta tanto:
+ *  - examenSolicitadoMedico / examenSolicitadoIA
+ *  - como examenMedico / examenIA           (compatibilidad con el frontend)
+ */
 app.post('/api/pacientes', async (req, res) => {
   try {
-    const { nombre, rut, edad, dolor, lado } = req.body || {};
-    if (!nombre || !rut || !edad || !dolor || !lado) {
-      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
+    const body = req.body || {};
+
+    const pacienteNombre = body.pacienteNombre || body.nombre;
+    const rut = body.rut;
+    const edad = body.edad;
+    const dolor = body.dolor;
+    const lado = body.lado;
+
+    // Nombres de exámenes (dos columnas separadas)
+    const examenSolicitadoMedico =
+      body.examenSolicitadoMedico || body.examenMedico || '';
+    const examenSolicitadoIA =
+      body.examenSolicitadoIA || body.examenIA || '';
+
+    const nombreMedico = body.nombreMedico || '';
+    const especialidad = body.especialidad || '';
+
+    // Validación mínima de datos del paciente
+    if (!pacienteNombre || !rut || !edad || !dolor || !lado) {
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Faltan campos obligatorios (pacienteNombre, rut, edad, dolor, lado).' });
     }
+
     const timestamp = new Date().toISOString();
+
     const row = [
       timestamp,
-      String(nombre),
+      String(pacienteNombre),
       String(rut),
       String(edad),
       String(dolor),
-      String(lado)
+      String(lado),
+      String(examenSolicitadoMedico),
+      String(examenSolicitadoIA),
+      String(nombreMedico),
+      String(especialidad),
     ];
-    await appendRow('Pacientes', row);
+
+    // IMPORTANTE: ahora escribimos en la hoja "LISTA"
+    await appendRow('LISTA', row);
+
     res.json({ ok: true });
   } catch (e) {
     console.error('Pacientes error:', e);
@@ -98,7 +134,8 @@ app.post('/api/pacientes', async (req, res) => {
 });
 
 // ========= TRAUMATOLOGO =========
-// Columns: timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
+// Columns (hoja Traumatologo):
+// timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
 app.post('/api/traumatologo', async (req, res) => {
   try {
     const { pacienteNombre, rut, edad, examenSolicitado, nombreMedico } = req.body || {};
@@ -125,7 +162,8 @@ app.post('/api/traumatologo', async (req, res) => {
 });
 
 // ========= MEDICO GENERAL =========
-// Columns: timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
+// Columns (hoja MedicoGeneral):
+// timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
 app.post('/api/medico-general', async (req, res) => {
   try {
     const { pacienteNombre, rut, edad, examenSolicitado, nombreMedico } = req.body || {};
