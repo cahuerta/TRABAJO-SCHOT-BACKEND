@@ -72,40 +72,29 @@ app.get('/_debug/auth', async (_req, res) => {
   }
 });
 
-/**
- * ========= PACIENTES (LISTA) =========
- * Hoja LISTA columnas:
- * timestamp | pacienteNombre | rut | edad | Dolor | Lado |
- * examenSolicitadoMedico | examenSolicitadoIA | nombreMedico | especialidad
- *
- * Acepta tanto:
- *  - examenSolicitadoMedico / examenSolicitadoIA
- *  - como examenMedico / examenIA           (compatibilidad con el frontend)
- */
-app.post('/api/pacientes', async (req, res) => {
+// ========= REGISTRO ÚNICO EN "LISTA" =========
+// Columns:
+// timestamp | pacienteNombre | rut | edad | dolor | lado |
+// examenSolicitadoMedico | examenSolicitadoIA | nombreMedico | especialidad
+app.post('/api/registrar', async (req, res) => {
   try {
-    const body = req.body || {};
-
-    const pacienteNombre = body.pacienteNombre || body.nombre;
-    const rut = body.rut;
-    const edad = body.edad;
-    const dolor = body.dolor;
-    const lado = body.lado;
-
-    // Nombres de exámenes (dos columnas separadas)
-    const examenSolicitadoMedico =
-      body.examenSolicitadoMedico || body.examenMedico || '';
-    const examenSolicitadoIA =
-      body.examenSolicitadoIA || body.examenIA || '';
-
-    const nombreMedico = body.nombreMedico || '';
-    const especialidad = body.especialidad || '';
+    const {
+      pacienteNombre,
+      rut,
+      edad,
+      dolor,
+      lado,
+      examenSolicitadoMedico,
+      examenSolicitadoIA,
+      nombreMedico,
+      especialidad
+    } = req.body || {};
 
     // Validación mínima de datos del paciente
     if (!pacienteNombre || !rut || !edad || !dolor || !lado) {
       return res
         .status(400)
-        .json({ ok: false, error: 'Faltan campos obligatorios (pacienteNombre, rut, edad, dolor, lado).' });
+        .json({ ok: false, error: 'Faltan datos obligatorios del paciente' });
     }
 
     const timestamp = new Date().toISOString();
@@ -117,74 +106,17 @@ app.post('/api/pacientes', async (req, res) => {
       String(edad),
       String(dolor),
       String(lado),
-      String(examenSolicitadoMedico),
-      String(examenSolicitadoIA),
-      String(nombreMedico),
-      String(especialidad),
+      String(examenSolicitadoMedico || ''),
+      String(examenSolicitadoIA || ''),
+      String(nombreMedico || ''),
+      String(especialidad || '')
     ];
 
-    // IMPORTANTE: ahora escribimos en la hoja "LISTA"
     await appendRow('LISTA', row);
 
     res.json({ ok: true });
   } catch (e) {
-    console.error('Pacientes error:', e);
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// ========= TRAUMATOLOGO =========
-// Columns (hoja Traumatologo):
-// timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
-app.post('/api/traumatologo', async (req, res) => {
-  try {
-    const { pacienteNombre, rut, edad, examenSolicitado, nombreMedico } = req.body || {};
-    if (!pacienteNombre || !rut || !edad || !examenSolicitado || !nombreMedico) {
-      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
-    }
-    const timestamp = new Date().toISOString();
-    const especialidad = 'Traumatólogo';
-    const row = [
-      timestamp,
-      String(pacienteNombre),
-      String(rut),
-      String(edad),
-      String(examenSolicitado),
-      String(nombreMedico),
-      especialidad
-    ];
-    await appendRow('Traumatologo', row);
-    res.json({ ok: true });
-  } catch (e) {
-    console.error('Traumatologo error:', e);
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// ========= MEDICO GENERAL =========
-// Columns (hoja MedicoGeneral):
-// timestamp | pacienteNombre | rut | edad | examenSolicitado | nombreMedico | especialidad
-app.post('/api/medico-general', async (req, res) => {
-  try {
-    const { pacienteNombre, rut, edad, examenSolicitado, nombreMedico } = req.body || {};
-    if (!pacienteNombre || !rut || !edad || !examenSolicitado || !nombreMedico) {
-      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios' });
-    }
-    const timestamp = new Date().toISOString();
-    const especialidad = 'Medicina general';
-    const row = [
-      timestamp,
-      String(pacienteNombre),
-      String(rut),
-      String(edad),
-      String(examenSolicitado),
-      String(nombreMedico),
-      especialidad
-    ];
-    await appendRow('MedicoGeneral', row);
-    res.json({ ok: true });
-  } catch (e) {
-    console.error('MedicoGeneral error:', e);
+    console.error('Error LISTA:', e);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
