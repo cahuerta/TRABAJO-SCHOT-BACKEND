@@ -73,9 +73,19 @@ app.get('/_debug/auth', async (_req, res) => {
 });
 
 // ========= REGISTRO ÚNICO EN "LISTA" =========
-// Columns:
-// timestamp | pacienteNombre | rut | edad | dolor | lado |
-// examenSolicitadoMedico | examenSolicitadoIA | nombreMedico | especialidad
+// Columnas en la Sheet (LISTA):
+// A  timestamp
+// B  pacienteNombre
+// C  rut
+// D  edad
+// E  Dolor
+// F  Lado
+// G  examenSolicitadoMedico
+// H  examenSolicitadoIA
+// I  nombreMedico
+// J  especialidad
+// K  modulo usado        (NUEVO)
+// L  tipo cirugia        (NUEVO)
 app.post('/api/registrar', async (req, res) => {
   try {
     const {
@@ -87,7 +97,10 @@ app.post('/api/registrar', async (req, res) => {
       examenSolicitadoMedico,
       examenSolicitadoIA,
       nombreMedico,
-      especialidad
+      especialidad,
+      // NUEVOS CAMPOS (opcionales, vienen desde el frontend)
+      moduloUsado,
+      tipoCirugia
     } = req.body || {};
 
     // Validación mínima de datos del paciente
@@ -100,16 +113,18 @@ app.post('/api/registrar', async (req, res) => {
     const timestamp = new Date().toISOString();
 
     const row = [
-      timestamp,
-      String(pacienteNombre),
-      String(rut),
-      String(edad),
-      String(dolor),
-      String(lado),
-      String(examenSolicitadoMedico || ''),
-      String(examenSolicitadoIA || ''),
-      String(nombreMedico || ''),
-      String(especialidad || '')
+      timestamp,                           // A
+      String(pacienteNombre),              // B
+      String(rut),                         // C
+      String(edad),                        // D
+      String(dolor),                       // E
+      String(lado),                        // F
+      String(examenSolicitadoMedico || ''),// G
+      String(examenSolicitadoIA || ''),    // H
+      String(nombreMedico || ''),          // I
+      String(especialidad || ''),          // J
+      String(moduloUsado || ''),           // K - modulo usado
+      String(tipoCirugia || '')            // L - tipo cirugia
     ];
 
     await appendRow('LISTA', row);
